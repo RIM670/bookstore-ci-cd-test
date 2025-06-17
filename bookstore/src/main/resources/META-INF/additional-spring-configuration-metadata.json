@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "spring.web.locale.resolver",
+      "type": "java.lang.String",
+      "description": "Description for spring.web.locale.resolver."
+  }
+] }

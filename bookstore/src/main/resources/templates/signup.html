@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" th:lang="${#locale}">
+<head>
+    <title th:text="#{signup}">Sign Up</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            padding: 30px;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            width: 300px;
+            margin: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        label {
+            font-weight: bold;
+        }
+        button {
+            width: 100%;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        a {
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+        }
+        /* Language selector styling */
+        .lang-select {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .lang-select select {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Sélecteur de langue -->
+    <form class="lang-select" th:action="@{/signup}" method="get" id="langForm">
+        <select name="lang" onchange="document.getElementById('langForm').submit()">
+            <option value="en" th:selected="${#locale.language == 'en'}">English</option>
+            <option value="fr" th:selected="${#locale.language == 'fr'}">Français</option>
+        </select>
+    </form>
+
+    <h2 th:text="#{signup}">Sign Up</h2>
+    <form th:action="@{/signup}" method="post">
+        <label th:text="#{email}">Email:</label>
+        <input type="email" name="email" required/>
+
+        <label th:text="#{password}">Password:</label>
+        <input type="password" name="password" required/>
+
+        <label th:text="#{confirm.password}">Confirm Password:</label>
+        <input type="password" name="confirmPassword" required/>
+
+        <button type="submit" th:text="#{signup}">Sign Up</button>
+    </form>
+
+    <p>
+        <span th:text="#{already.account}">Already have an account?</span>
+        <a th:href="@{/login}" th:text="#{login}">Login here</a>
+    </p>
+</div>
+
+</body>
+</html>

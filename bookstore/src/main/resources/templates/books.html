@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Books</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 30px;
+            background-color: #f8f9fa;
+        }
+        h2 {
+            color: #343a40;
+        }
+        .book {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #007bff;
+            border: none;
+            padding: 8px 12px;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        a {
+            margin-right: 15px;
+            color: #007bff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragment :: header}"></div>
+<h2 th:text="#{available.books}">Available Books</h2>
+<div th:each="book : ${books}" class="book">
+    <p><strong th:text="${book.title}"></strong> by <span th:text="${book.author}"></span> - <span th:text="${book.price} + ' $'"></span></p>
+    <form th:action="@{/cart/add}" method="post">
+        <input type="hidden" name="title" th:value="${book.title}" />
+        <button type="submit" th:text="#{add.to.cart}">Add to Cart</button>
+
+    </form>
+</div>
+<br/>
+<a th:href="@{/cart}" th:text="#{view.cart}">View Cart</a>
+<form th:action="@{/logout}" method="post" style="display:inline;">
+    <button type="submit" th:text="#{logout}" style="background:none; border:none; padding:0; cursor:pointer; color:#007bff; text-decoration:solid;">Logout</button>
+</form>
+<div th:replace="~{fragment :: footer}"></div>
+</body>
+</html>

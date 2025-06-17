@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title th:text="#{title}">Mini Bookstore</title>
+    <style>
+        /* Safe navbar styling - won't affect redirects */
+        .main-nav {
+            background: #f8f9fa;
+            padding: 1rem 2rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: #495057;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.25rem 0;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: #0d6efd;
+        }
+
+        .nav-divider {
+            color: #adb5bd;
+        }
+
+        /* Language switcher specific styles */
+        .lang-switcher {
+            margin-left: auto;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header fragment with improved structure -->
+<header th:fragment="header">
+    <nav class="main-nav">
+        <div class="nav-links">
+            <a class="nav-link" th:href="@{/books}" th:text="#{title}">Books</a>
+            <span class="nav-divider">|</span>
+            <a class="nav-link" th:href="@{/cart}" th:text="#{cart}">Cart</a>
+            <span class="nav-divider">|</span>
+            <a class="nav-link" th:href="@{/login}" th:text="#{login}">Login</a>
+            <span class="nav-divider">|</span>
+            <a class="nav-link" th:href="@{/signup}" th:text="#{signup}">Signup</a>
+
+
+            <!-- Language switcher with better styling -->
+            <div class="lang-switcher" th:if="${#httpServletRequest != null}">
+                <a class="nav-link" th:href="@{${#httpServletRequest.requestURI}(lang='en')}">EN</a>
+                <span class="nav-divider">|</span>
+                <a class="nav-link" th:href="@{${#httpServletRequest.requestURI}(lang='fr')}">FR</a>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<!-- Footer fragment -->
+<footer th:fragment="footer">
+    <p>&copy; 2025 Mini Bookstore</p>
+</footer>
+
+</body>
+</html>
+
+
+

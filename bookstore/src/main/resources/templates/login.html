@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" th:lang="${#locale}">
+<head>
+    <title th:text="#{login}">Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            padding: 30px;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            width: 300px;
+            margin: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        label {
+            font-weight: bold;
+        }
+        button {
+            width: 100%;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .error {
+            color: red;
+            font-size: 14px;
+            margin-top: -10px;
+            margin-bottom: 10px;
+        }
+        a {
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+        }
+        /* Language selector styling */
+        .lang-select {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .lang-select select {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Language selector form -->
+    <form class="lang-select" th:action="@{/login}" method="get" id="langForm">
+        <select name="lang" onchange="document.getElementById('langForm').submit()">
+            <option value="en" th:selected="${#locale.language == 'en'}">English</option>
+            <option value="fr" th:selected="${#locale.language == 'fr'}">Français</option>
+        </select>
+    </form>
+
+    <h2 th:text="#{login}">Login</h2>
+    <form th:action="@{/login}" method="post">
+        <label th:text="#{email}">Email:</label>
+        <input type="text" name="username" required/>
+
+        <label th:text="#{password}">Password:</label>
+        <input type="password" name="password" required/>
+
+        <div th:if="${param.error}" class="error" th:text="#{login.error}">
+            Invalid credentials
+        </div>
+
+        <button type="submit" th:text="#{login}">Login</button>
+    </form>
+
+    <p>
+        <span th:text="#{no.account}">Don't have an account?</span>
+        <a th:href="@{/signup}" th:text="#{signup}">Sign up here</a>
+    </p>
+</div>
+
+</body>
+</html>
