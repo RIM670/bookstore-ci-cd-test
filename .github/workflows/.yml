@@ -24,7 +24,7 @@ jobs:
       run: ./mvnw clean install
 
     - name: Build Docker Image
-      run: docker build -t bookstore-app .
+      run: docker build -t bookstore-app bookstore
 
     - name: Stop and Remove existing container
       run: |
