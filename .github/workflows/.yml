@@ -1,0 +1,49 @@
+name: CI/CD for Bookstore App
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '18'
+
+    - name: Build and test with Maven
+      run: |
+        cd bookstore
+        chmod +x mvnw
+        ./mvnw clean install
+
+    - name: Check if JAR exists
+      run: |
+        echo "Listing contents of bookstore/target..."
+        ls -l bookstore/target
+
+        echo "Checking if JAR exists..."
+        if [ -z "$(ls bookstore/target/*.jar 2>/dev/null)" ]; then
+          echo "ERROR: No JAR file found in bookstore/target"
+          exit 1
+        fi
+
+    - name: Build Docker image
+      run: docker build -t bookstore-app ./bookstore
+
+    - name: Stop and remove existing container
+      run: |
+        docker stop bookstore-container || true
+        docker rm bookstore-container || true
+
+    - name: Run Docker container
+      run: docker run -d -p 8080:8080 --name bookstore-container bookstore-app
