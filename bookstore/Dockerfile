@@ -5,7 +5,7 @@ FROM eclipse-temurin:17-jdk-alpine
 WORKDIR /app
 
 # Copy the jar file into the container
-COPY target/*.jar app.jar
+COPY bookstore/target/*.jar app.jar
 
 # Open port 8080 (Spring Boot default)
 EXPOSE 8080
