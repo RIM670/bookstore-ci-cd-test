@@ -27,10 +27,11 @@ jobs:
         chmod +x mvnw
         ./mvnw clean install
 
-    - name: Verify JAR exists
-      run: |
-        echo "Checking bookstore/target for JAR..."
-        ls -lh bookstore/target/*.jar || (echo "JAR not found" && exit 1)
+    - name: Save JAR as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: bookstore-jar
+        path: bookstore/target/*.jar
 
   scan:
     name: Trivy Scan
@@ -41,9 +42,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Build Docker image for scanning
-      run: docker build -t bookstore-app ./bookstore
+    - name: Download JAR
+      uses: actions/download-artifact@v4
+      with:
+        name: bookstore-jar
+        path: target
 
+    - name: Build Docker image for scanning
+      run: docker build -t bookstore-app .
 
     - name: Run Trivy scan
       run: |
@@ -62,6 +68,12 @@ jobs:
     needs: scan
 
     steps:
+    - name: Download JAR
+      uses: actions/download-artifact@v4
+      with:
+        name: bookstore-jar
+        path: target
+
     - name: Stop and remove old container
       run: |
         docker stop bookstore-container || true
@@ -72,7 +84,7 @@ jobs:
         docker rmi -f bookstore-app || true
 
     - name: Build new Docker image
-      run: docker build -t bookstore-app ./bookstore
+      run: docker build -t bookstore-app .
 
     - name: Run new container
       run: docker run -d -p 8080:8080 --name bookstore-container bookstore-app
