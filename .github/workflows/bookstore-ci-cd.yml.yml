@@ -42,9 +42,8 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Build Docker image for scanning
-      run: |
-       cd bookstore
-       docker build -t bookstore-app .
+      run: docker build -t bookstore-app ./bookstore
+
 
     - name: Run Trivy scan
       run: |
