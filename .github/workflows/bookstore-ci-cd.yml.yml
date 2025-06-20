@@ -14,11 +14,24 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Cache Maven packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
     - name: Set up Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '18'
+
+    - name: Clean up Docker before build
+      run: |
+        docker container prune -f
+        docker image prune -f
 
     - name: Build and test with Maven
       run: |
@@ -40,6 +53,26 @@ jobs:
     - name: Build Docker image
       run: docker build -t bookstore-app ./bookstore
 
+    - name: Install Trivy (if not available)
+      run: |
+        if ! command -v trivy &> /dev/null; then
+          echo "Installing Trivy..."
+          sudo apt-get update && sudo apt-get install -y wget
+          wget -qO- https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.50.1_Linux-64bit.deb -O trivy.deb
+          sudo dpkg -i trivy.deb
+        fi
+
+    - name: Scan Docker image with Trivy and save report
+      run: |
+        mkdir -p trivy-reports
+        trivy image --format html --output trivy-reports/trivy-report.html --severity CRITICAL,HIGH bookstore-app || true
+
+    - name: Upload Trivy report artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: trivy-report
+        path: trivy-reports/trivy-report.html
+
     - name: Stop and remove existing container
       run: |
         docker stop bookstore-container || true
@@ -47,3 +80,9 @@ jobs:
 
     - name: Run Docker container
       run: docker run -d -p 8080:8080 --name bookstore-container bookstore-app
+
+    - name: Final Docker cleanup (optional)
+      if: always()
+      run: |
+        docker image prune -f
+        docker container prune -f
