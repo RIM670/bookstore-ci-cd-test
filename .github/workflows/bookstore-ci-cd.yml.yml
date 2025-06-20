@@ -49,7 +49,7 @@ jobs:
         path: target
 
     - name: Build Docker image for scanning
-      run: docker build -t bookstore-app .
+      run: docker build -t bookstore-app -f bookstore/Dockerfile .
 
     - name: Run Trivy scan
       run: |
