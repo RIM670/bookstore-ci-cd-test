@@ -2,89 +2,92 @@ name: CI/CD for Bookstore App
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-  build:
-    name: Build and Test
+  build-and-test:
+    name: 🔧 Build and Test
     runs-on: self-hosted
 
     steps:
-    - name: Checkout code
+    - name: 📥 Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Java
+    - name: ☕ Set up Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '18'
 
-    - name: Build with Maven
+    - name: 📦 Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - name: 🧪 Build with Maven
       run: |
         cd bookstore
         chmod +x mvnw
-        ./mvnw clean install
+        ./mvnw clean install --no-transfer-progress
 
-    - name: Save JAR as artifact
+    - name: 📁 Save JAR artifact
       uses: actions/upload-artifact@v4
       with:
         name: bookstore-jar
         path: bookstore/target/*.jar
 
-  scan:
-    name: Trivy Scan
+  security-scan:
+    name: 🔒 Trivy Scan
     runs-on: self-hosted
-    needs: build
+    needs: build-and-test
 
     steps:
-    - name: Checkout code
+    - name: 📥 Checkout code
       uses: actions/checkout@v4
 
-    - name: Download JAR
-      uses: actions/download-artifact@v4
-      with:
-        name: bookstore-jar
-        path: target
-
-    - name: Build Docker image for scanning
+    - name: 🐳 Build Docker image for scan
       run: docker build -t bookstore-app -f bookstore/Dockerfile .
 
-    - name: Run Trivy scan
+    - name: 🔎 Run Trivy scan
       run: |
         mkdir -p trivy-reports
-        trivy image --format html --output trivy-reports/trivy-report.html --severity CRITICAL,HIGH bookstore-app || true
+        trivy image --format html --output trivy-reports/report.html --severity CRITICAL,HIGH bookstore-app || true
 
-    - name: Upload Trivy report
+    - name: 📤 Upload Trivy report
       uses: actions/upload-artifact@v4
       with:
         name: trivy-report
-        path: trivy-reports/trivy-report.html
+        path: trivy-reports/report.html
 
-  deploy:
-    name: Deploy Container
+  dockerize:
+    name: 🐳 Build Docker Image
     runs-on: self-hosted
-    needs: scan
+    needs: build-and-test
 
     steps:
-    - name: Download JAR
-      uses: actions/download-artifact@v4
-      with:
-        name: bookstore-jar
-        path: target
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
 
-    - name: Stop and remove old container
+    - name: 🧼 Clean previous images
       run: |
         docker stop bookstore-container || true
         docker rm bookstore-container || true
-
-    - name: Remove old Docker image
-      run: |
         docker rmi -f bookstore-app || true
 
-    - name: Build new Docker image
-      run: docker build -t bookstore-app ./bookstore
+    - name: 🐳 Build Docker image
+      run: docker build -t bookstore-app -f bookstore/Dockerfile .
 
-    - name: Run new container
+  deploy:
+    name: 🚀 Deploy
+    runs-on: self-hosted
+    needs: [dockerize, security-scan]
+
+    steps:
+    - name: 🔁 Run new container
       run: docker run -d -p 8080:8080 --name bookstore-container bookstore-app
