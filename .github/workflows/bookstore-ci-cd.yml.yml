@@ -7,20 +7,13 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-deploy:
+  build:
+    name: Build and Test
     runs-on: self-hosted
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
-    - name: Cache Maven packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          ${{ runner.os }}-maven-
 
     - name: Set up Java
       uses: actions/setup-java@v4
@@ -28,61 +21,57 @@ jobs:
         distribution: 'temurin'
         java-version: '18'
 
-    - name: Clean up Docker before build
-      run: |
-        docker container prune -f
-        docker image prune -f
-
-    - name: Build and test with Maven
+    - name: Build with Maven
       run: |
         cd bookstore
         chmod +x mvnw
         ./mvnw clean install
 
-    - name: Check if JAR exists
+    - name: Verify JAR exists
       run: |
-        echo "Listing contents of bookstore/target..."
-        ls -l bookstore/target
+        echo "Checking bookstore/target for JAR..."
+        ls -lh bookstore/target/*.jar || (echo "JAR not found" && exit 1)
 
-        echo "Checking if JAR exists..."
-        if [ -z "$(ls bookstore/target/*.jar 2>/dev/null)" ]; then
-          echo "ERROR: No JAR file found in bookstore/target"
-          exit 1
-        fi
+  scan:
+    name: Trivy Scan
+    runs-on: self-hosted
+    needs: build
 
-    - name: Build Docker image
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build Docker image for scanning
       run: docker build -t bookstore-app ./bookstore
 
-    - name: Install Trivy (if not available)
-      run: |
-        if ! command -v trivy &> /dev/null; then
-          echo "Installing Trivy..."
-          sudo apt-get update && sudo apt-get install -y wget
-          wget -qO- https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.50.1_Linux-64bit.deb -O trivy.deb
-          sudo dpkg -i trivy.deb
-        fi
-
-    - name: Scan Docker image with Trivy and save report
+    - name: Run Trivy scan
       run: |
         mkdir -p trivy-reports
         trivy image --format html --output trivy-reports/trivy-report.html --severity CRITICAL,HIGH bookstore-app || true
 
-    - name: Upload Trivy report artifact
+    - name: Upload Trivy report
       uses: actions/upload-artifact@v4
       with:
         name: trivy-report
         path: trivy-reports/trivy-report.html
 
-    - name: Stop and remove existing container
+  deploy:
+    name: Deploy Container
+    runs-on: self-hosted
+    needs: scan
+
+    steps:
+    - name: Stop and remove old container
       run: |
         docker stop bookstore-container || true
         docker rm bookstore-container || true
 
-    - name: Run Docker container
-      run: docker run -d -p 8080:8080 --name bookstore-container bookstore-app
-
-    - name: Final Docker cleanup (optional)
-      if: always()
+    - name: Remove old Docker image
       run: |
-        docker image prune -f
-        docker container prune -f
+        docker rmi -f bookstore-app || true
+
+    - name: Build new Docker image
+      run: docker build -t bookstore-app ./bookstore
+
+    - name: Run new container
+      run: docker run -d -p 8080:8080 --name bookstore-container bookstore-app
