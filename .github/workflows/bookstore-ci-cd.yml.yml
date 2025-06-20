@@ -84,7 +84,7 @@ jobs:
         docker rmi -f bookstore-app || true
 
     - name: Build new Docker image
-      run: docker build -t bookstore-app .
+      run: docker build -t bookstore-app ./bookstore
 
     - name: Run new container
       run: docker run -d -p 8080:8080 --name bookstore-container bookstore-app
