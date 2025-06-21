@@ -62,11 +62,11 @@ jobs:
         name: trivy-report
         path: trivy-reports/trivy-report.html
   sonar:
-     name: SonarQube Scan
-     runs-on: self-hosted
-     needs: build
+    name: SonarQube Scan
+    runs-on: self-hosted
+    needs: build
 
-     steps:
+    steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -82,9 +82,14 @@ jobs:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
+
       - name: Make mvnw executable
         run: chmod +x bookstore/mvnw
-  
+
+      - name: Build project
+        run: |
+          cd bookstore
+          ./mvnw clean verify
 
       - name: Run SonarQube Analysis
         run: |
@@ -93,6 +98,7 @@ jobs:
             -Dsonar.projectKey=bookstore-app \
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+
 
 
   deploy:
