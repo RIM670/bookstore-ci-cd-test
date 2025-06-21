@@ -83,7 +83,7 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
       - name: Make mvnw executable
-        run: chmod +x mvnw
+        run: chmod +x bookstore/mvnw
   
 
       - name: Run SonarQube Analysis
