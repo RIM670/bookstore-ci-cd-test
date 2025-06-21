@@ -61,6 +61,36 @@ jobs:
       with:
         name: trivy-report
         path: trivy-reports/trivy-report.html
+  sonar:
+     name: SonarQube Scan
+     runs-on: self-hosted
+     needs: build
+
+     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '18'
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Run SonarQube Analysis
+        run: |
+          cd bookstore
+          ./mvnw sonar:sonar \
+            -Dsonar.projectKey=bookstore-app \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+
 
   deploy:
     name: Deploy Container
